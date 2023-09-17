@@ -11,16 +11,14 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.util.Optional;
 
-@WebServlet("/signUp")
-public class SignUpServlet extends HttpServlet {
+@WebServlet("/signIn")
+public class SignInServlet extends HttpServlet {
     private UsersService usersService;
-
-    public SignUpServlet() {
-
-    }
 
     @Override
     public void init() throws ServletException {
@@ -32,19 +30,21 @@ public class SignUpServlet extends HttpServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/signUp.html");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/signIn.html");
         dispatcher.forward(request, response);
     }
 
     @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String email = request.getParameter("email");
-        String firstName = request.getParameter("firstName");
-        String lastName = request.getParameter("lastName");
-        String phoneNumber = request.getParameter("phoneNumber");
         String password = request.getParameter("password");
-        User newUser = new User(1L, email, firstName, lastName, phoneNumber, password);
-        this.usersService.registerUser(newUser);
-        response.sendRedirect("/signIn");
+        Optional<User> optionalUser = this.usersService.signIn(email, password);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            HttpSession session = request.getSession();
+            session.setAttribute("user", user);
+            response.sendRedirect("/profile");
+        } else
+            response.sendRedirect("/signIn");
     }
 }
