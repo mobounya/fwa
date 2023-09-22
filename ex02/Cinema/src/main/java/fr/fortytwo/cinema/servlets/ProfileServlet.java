@@ -19,4 +19,21 @@ public class ProfileServlet extends HttpServlet {
         RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/profile.jsp");
         dispatcher.forward(request, response);
     }
+
+    public String getFileType(String fileName) {
+        int pointIndex = fileName.indexOf('.');
+        if (pointIndex == -1)
+            return null;
+        String type = fileName.substring(pointIndex + 1);
+        if (type.equals("jpeg") || type.equals("jpg"))
+            return "image/jpeg";
+        else if (type.equals("png"))
+            return "image/png";
+        else if (type.equals("svg"))
+            return "image/svg";
+        else if (type.equals("avif"))
+            return "image/avif";
+        else
+            return null;
+    }
 }

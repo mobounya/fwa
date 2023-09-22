@@ -113,7 +113,8 @@ public class ImagesServlet extends HttpServlet {
             outputStream.flush();
             Map<String, String> images = (Map<String, String>) session.getAttribute("images");
             images.put(fullImageName, getFileSize(totalFileSize));
-            response.setStatus(200);
+            session.setAttribute("avatar", "/images/" + fullImageName);
+            response.sendRedirect("/profile");
         }
     }
 }

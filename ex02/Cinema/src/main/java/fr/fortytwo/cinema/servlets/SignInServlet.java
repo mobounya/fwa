@@ -14,6 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @WebServlet("/signIn")
@@ -43,6 +48,14 @@ public class SignInServlet extends HttpServlet {
             User user = optionalUser.get();
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
+            if (session.getAttribute("auths") == null)
+                session.setAttribute("auths", new ArrayList<String>());
+
+            List<String> auths = (List<String>) session.getAttribute("auths");
+            LocalDateTime currentTime = LocalDateTime.now();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy");
+            DateTimeFormatter hourFormatter = DateTimeFormatter.ofPattern("HH:mm");
+            auths.add(dateFormatter.format(currentTime) + "-" + hourFormatter.format(currentTime) + "-" + request.getRemoteAddr());
             response.sendRedirect("/profile");
         } else
             response.sendRedirect("/signIn");
