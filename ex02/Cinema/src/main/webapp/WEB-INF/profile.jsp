@@ -4,6 +4,9 @@
 <%@page import="java.io.*" %>
 <%@page import="java.util.*" %>
 
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,108 +33,80 @@
 </head>
 <body>
     <%!
-        String getFileType(String fileName) {
-            int pointIndex = fileName.indexOf('.');
-            if (pointIndex == -1)
-                return null;
-            String type = fileName.substring(pointIndex + 1);
-            if (type.equals("jpeg") || type.equals("jpg"))
-                return "image/jpeg";
-            else if (type.equals("png"))
-                return "image/png";
-            else if (type.equals("svg"))
-                return "image/svg";
-            else if (type.equals("avif"))
-                return "image/avif";
-            else
-                return null;
-        }
+        List<String> auths;
         User user = null;
         Map<String, String> images = null;
-        List<String> auths;
     %>
 
     <%
         User user = (User) session.getAttribute("user");
-        Map<String, String> images = (Map<String, String>) session.getAttribute("images");
-        String avatar = (String) session.getAttribute("avatar");
         auths = (List<String>) session.getAttribute("auths");
-        if (avatar == null)
-            avatar = "/images/not_available.png";
     %>
 
-    <%= "<div style='overflow: auto; max-width: 780px; max-height: 100%; margin-left: 783px; margin-top: 260px;'>\n" %>
+    <div style='overflow: auto; max-width: 780px; max-height: 100%; margin-left: 783px; margin-top: 260px;'>
 
-    <%= "<div id='user''>\n" %>
+    <div id='user'>
 
-    <%= "<div id='image' style='display: inline;'>\n" %>
-    <%= "<img style='max-height: auto; max-width: 500px;' src='" + avatar + "'alt='avatar'>\n" %>
-    <%= "</div>" %>
+    <c:set var="avatar" value="${sessionScope.avatar}" />
 
-    <%= "<div id='user_info' style='float: right;'>"%>
+    <div id='image' style='display: inline;'>
+        <c:if test="${avatar == null}">
+            <c:set var="avatar" value="/images/not_available.png" />
+        </c:if>
+        <c:out value="<img style='max-height: auto; max-width: 500px;' src='${avatar}'  alt='avatar'>" escapeXml="false" />
+    </div>
+
+    <div id='user_info' style='float: right;'>
     <%= "<h3> " + user.getFirstName() + " " + user.getLastName() + " </h3>\n" %>
     <%= "<h3> " + user.getEmail() + " </h3>\n" %>
 
-    <%= "<table id='auths'>\n" +
-        "  <tr>\n" +
-        "    <th>Date</th>\n" +
-        "    <th>Time</th>\n" +
-        "    <th>IP</th>\n" +
-        "  </tr>"
-    %>
+    <table id='auths'>
+    <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>IP</th>
+    </tr>
 
-    <%
-        String[] data = auths.toArray(new String[0]);
+    <c:set var="auths" value="${sessionScope.auths}" />
 
-        for (String str : data) {
-            String[] splits = str.split("-");
-            out.println("<tr>\n");
-            out.println("   <td>" + splits[0] + "</td>\n");
-            out.println("   <td>" + splits[1] + "</td>\n");
-            out.println("   <td>" + splits[2] + "</td>\n");
-            out.println("</tr>\n");
-        }
-        out.println("</table>\n");
-    %>
-    <%= "</div></div>\n" %>
+    <c:forEach var="data" items="${auths}">
+        <c:set var="array" value="${fn:split(data, '-')}" />
+        <tr>
+            <c:out value="<th> ${array[0]} </th>" escapeXml="false" />
+            <c:out value="<th> ${array[1]} </th>" escapeXml="false" />
+            <c:out value="<th> ${array[2]} </th>" escapeXml="false" />
+        </tr>
+    </c:forEach>
 
-    <%= "<div id='image_table' style=''>\n" %>
+    </table>
 
-    <%= "<form action='/images' method='POST' enctype='multipart/form-data' style='margin-top: 25px; margin-bottom: 25px;'>" %>
-    <%= "<label for='file' class='custom-upload-button'>Choose a File</label>" %>
-    <%= "   <input type='file' id='file' name='myFile' accept='image/*'>" %>
-    <%= "   <input type='submit' value='Upload'>" %>
-    <%= "</form>" %>
+    </div></div>
 
-    <%=
-        "<table id='files'>\n" +
-        "  <tr>\n" +
-        "    <th>File name</th>\n" +
-        "    <th>Size</th>\n" +
-        "    <th>MIME</th>\n" +
-        "  </tr>\n"
-    %>
+    <div id='image_table'>
 
-    <%
-        if (images != null) {
-            Set<Map.Entry<String, String>> set =  images.entrySet();
-            for (Map.Entry<String, String> entry : set) {
-                String key = entry.getKey();
-                String value = entry.getValue();
-                String type = getFileType(key);
-                if (type == null)
-                    type = "N/A";
-                out.println("  <tr>\n");
-                out.println("    <th> <a href='" + "/images/" + key + "'>" + key.substring(10) + "</a></th>\n");
-                out.println("    <th>" + value + "</th>\n");
-                out.println("    <th>" + type + "</th>\n");
-                out.println("  </tr>\n");
-            }
-        }
-        out.println("</table>\n");
-    %>
-    <%= "</div>\n" %>
-    <%= "</div>\n" %>
-    <%= "</div>\n" %>
+    <form action='/images' method='POST' enctype='multipart/form-data' style='margin-top: 25px; margin-bottom: 25px;'>
+        <label for='file' class='custom-upload-button'>Choose a File</label>
+        <input type='file' id='file' name='myFile' accept='image/*'>
+        <input type='submit' value='Upload'>
+    </form>
+
+    <table id='files'>
+    <tr>
+        <th>File name</th>
+        <th>Size</th>
+        <th>MIME</th>
+    </tr>
+
+    <c:set var="images" value="${sessionScope.images}" />
+    <c:forEach var="image" items="${images}">
+        <c:set var="array" value="${fn:split(image, '-')}" />
+        <tr>
+            <c:out value="<th> <a href='/images/${array[0]}' target='_blank'> ${fn:substring(array[0], 10, array[0].length())} </a> </th>" escapeXml="false" />
+            <c:out value="<th> ${array[1]} </th>" escapeXml="false" />
+            <c:out value="<th> ${array[2]} </th>" escapeXml="false" />
+        </tr>
+    </c:forEach>
+
+    <%= "</table></div></div></div>\n" %>
 </body>
 </html>

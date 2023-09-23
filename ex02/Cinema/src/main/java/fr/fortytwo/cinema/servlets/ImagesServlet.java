@@ -13,7 +13,9 @@ import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @WebServlet("/images/*")
@@ -28,16 +30,21 @@ public class ImagesServlet extends HttpServlet {
     private final static long MB = KB * 1000;
     private final static long GB = MB * 1000;
 
-    @Override
-    public void init() throws ServletException {
-        super.init();
-        ServletContext servletContext = getServletContext();
-        ApplicationContext applicationContext = (ApplicationContext) servletContext.getAttribute("springContext");
-        this.usersService = applicationContext.getBean(UsersService.class);
-        this.imageStoragePath = applicationContext.getEnvironment().getProperty("storage.path");
-
-        if (this.imageStoragePath != null && this.imageStoragePath.charAt(this.imageStoragePath.length() - 1) != '/')
-            this.imageStoragePath = this.imageStoragePath + "/";
+    private String getFileType(String fileName) {
+        int pointIndex = fileName.indexOf('.');
+        if (pointIndex == -1)
+            return null;
+        String type = fileName.substring(pointIndex + 1);
+        if (type.equals("jpeg") || type.equals("jpg"))
+            return "image/jpeg";
+        else if (type.equals("png"))
+            return "image/png";
+        else if (type.equals("svg"))
+            return "image/svg";
+        else if (type.equals("avif"))
+            return "image/avif";
+        else
+            return "N/A";
     }
 
     private String getFileSize(long fileSize) {
@@ -52,6 +59,18 @@ public class ImagesServlet extends HttpServlet {
     }
 
     @Override
+    public void init() throws ServletException {
+        super.init();
+        ServletContext servletContext = getServletContext();
+        ApplicationContext applicationContext = (ApplicationContext) servletContext.getAttribute("springContext");
+        this.usersService = applicationContext.getBean(UsersService.class);
+        this.imageStoragePath = applicationContext.getEnvironment().getProperty("storage.path");
+
+        if (this.imageStoragePath != null && this.imageStoragePath.charAt(this.imageStoragePath.length() - 1) != '/')
+            this.imageStoragePath = this.imageStoragePath + "/";
+    }
+
+    @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         ServletContext context = request.getServletContext();
         String pathInfo = request.getPathInfo();
@@ -62,7 +81,7 @@ public class ImagesServlet extends HttpServlet {
             } else {
                 ServletOutputStream outputStream = response.getOutputStream();
                 byte[] bytes = input.readAllBytes();
-                response.setContentType("images/jpeg");
+                response.setContentType(getFileType(imagePath));
                 outputStream.write(bytes);
             }
         }
@@ -100,7 +119,7 @@ public class ImagesServlet extends HttpServlet {
         }
         HttpSession session = request.getSession();
         if (session.getAttribute("images") == null)
-            session.setAttribute("images", new HashMap<String, String>());
+            session.setAttribute("images", new ArrayList<>());
         try (FileOutputStream outputStream = new FileOutputStream(imageFile)) {
             byte[] bytes = new byte[100];
             int bytesRead;
@@ -111,8 +130,8 @@ public class ImagesServlet extends HttpServlet {
                 totalFileSize += bytesRead;
             }
             outputStream.flush();
-            Map<String, String> images = (Map<String, String>) session.getAttribute("images");
-            images.put(fullImageName, getFileSize(totalFileSize));
+            List<String> images = (List<String>) session.getAttribute("images");
+            images.add(fullImageName + "-" + getFileSize(totalFileSize) + "-" + getFileType(fullImageName));
             session.setAttribute("avatar", "/images/" + fullImageName);
             response.sendRedirect("/profile");
         }
