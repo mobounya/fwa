@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @WebServlet("/signUp")
 public class SignUpServlet extends HttpServlet {
@@ -43,6 +44,11 @@ public class SignUpServlet extends HttpServlet {
         String lastName = request.getParameter("lastName");
         String phoneNumber = request.getParameter("phoneNumber");
         String password = request.getParameter("password");
+        Optional<User> optionalUser = this.usersService.findUserByEmail(email);
+        if (optionalUser.isPresent()) {
+            response.setStatus(400);
+            return ;
+        }
         User newUser = new User(1L, email, firstName, lastName, phoneNumber, password);
         this.usersService.registerUser(newUser);
         response.sendRedirect("/signIn");

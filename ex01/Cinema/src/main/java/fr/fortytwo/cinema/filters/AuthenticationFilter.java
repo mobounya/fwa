@@ -15,7 +15,7 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest)request;
         HttpServletResponse httpResponse = (HttpServletResponse)response;
         HttpSession session = httpRequest.getSession();
-        if (session.getAttribute("email") != null)
+        if (session.getAttribute("user") != null)
             chain.doFilter(request, response);
         else {
             httpResponse.setStatus(403);

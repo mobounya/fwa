@@ -33,11 +33,18 @@ public class UsersService {
         usersRepository.save(user);
     }
 
-    public boolean signIn(String email, String password) {
-        Optional<User> optionalUser = usersRepository.findByEmail(email);
+    public Optional<User> findUserByEmail(String email) {
+        return this.usersRepository.findByEmail(email);
+    }
+
+    public Optional<User> signIn(String email, String password) {
+        Optional<User> optionalUser = findUserByEmail(email);
         if (optionalUser.isEmpty())
-            return false;
+            return Optional.empty();
         User fetchedUser = optionalUser.get();
-        return comparePasswords(password, fetchedUser.getPassword());
+        if (comparePasswords(password, fetchedUser.getPassword()))
+            return Optional.of(fetchedUser);
+        else
+            return Optional.empty();
     }
 }

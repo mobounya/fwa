@@ -1,6 +1,2 @@
 <web-app>
-    <context-param>
-        <param-name>name</param-name>
-        <param-value>mobounya</param-value>
-    </context-param>
 </web-app>

@@ -1,5 +1,6 @@
 package fr.fortytwo.cinema.servlets;
 
+import fr.fortytwo.cinema.models.User;
 import fr.fortytwo.cinema.services.UsersService;
 import org.springframework.context.ApplicationContext;
 
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @WebServlet("/signIn")
 public class SignInServlet extends HttpServlet {
@@ -36,10 +38,10 @@ public class SignInServlet extends HttpServlet {
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
-        boolean success = this.usersService.signIn(email, password);
-        if (success) {
+        Optional<User> optionalUser = this.usersService.signIn(email, password);
+        if (optionalUser.isPresent()) {
             HttpSession session = request.getSession();
-            session.setAttribute("email", email);
+            session.setAttribute("user", optionalUser.get());
             response.sendRedirect("/profile");
         } else
             response.sendRedirect("/signIn");
